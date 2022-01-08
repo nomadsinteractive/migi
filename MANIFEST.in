@@ -1,0 +1,2 @@
+recursive-include migi/bin *.pyd
+recursive-include migi/bin *.dll

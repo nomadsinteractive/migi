@@ -1,5 +1,4 @@
 # MIGI (My Ideas Got Incepted)
--------------------
 
 A powerful and versatile dynamic instrumentation toolkit.
 
