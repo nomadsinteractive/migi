@@ -1,0 +1,6 @@
+{
+  "python_paths": [
+    "${migi.work_dir}",
+    "libs"
+  ]
+}
