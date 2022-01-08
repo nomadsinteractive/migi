@@ -1,0 +1,92 @@
+PUBLIC {table_name}_entries
+PUBLIC {table_name}_pre_calls
+PUBLIC {table_name}_pre_call_args
+PUBLIC {table_name}_post_calls
+PUBLIC {table_name}_bridges
+PUBLIC {table_name}_table_len
+
+_STACK_UNIT_SIZE    EQU 32
+_STACK_SIZE         EQU {stack_len} * _STACK_UNIT_SIZE
+
+_DATA	segment
+
+{table_name}_entries       DQ  {table_len}     DUP(0)
+{table_name}_pre_calls     DQ  {table_len}     DUP(0)
+{table_name}_pre_call_args DQ  {table_len}     DUP(0)
+{table_name}_post_calls    DQ  {table_len}     DUP(0)
+
+{table_name}_stacks     DB  _STACK_SIZE     DUP(0)
+{table_name}_stack_ptr  DQ  0
+
+_DATA	ends
+
+_RDATA	segment
+
+{table_name}_table_len  DQ   {table_len}
+{table_name}_bridges    {f'{os.linesep}								'.join(['DQ {table_name}_bridge_{0}'.format(i + 1, **j) for i, j in enumerate([locals()] * table_len)])}
+
+_RDATA	ends
+
+_TEXT	segment
+
+{table_name}_bridge_stack_poll PROC
+
+    mov     rax, [{table_name}_stack_ptr]
+    inc     rax
+    cmp     rax, {stack_len}
+    jl      loc{table_name}_bridge_stack_poll_store
+    mov     rax, 0
+loc{table_name}_bridge_stack_poll_store:
+    mov     [{table_name}_stack_ptr], rax
+
+    imul    rax, _STACK_UNIT_SIZE
+    push    rbx
+    lea     rbx, offset {table_name}_stacks
+    add     rax, rbx
+    pop     rbx
+
+    ret
+
+{table_name}_bridge_stack_poll ENDP
+
+{''.join(['''
+{func_name} PROC
+
+    call    {table_name}_bridge_stack_poll
+    mov     [rax + 8], rbx
+    mov     [rax + 24], rcx
+    mov     rbx, rax
+    pop     rax
+    mov     [rbx], rax
+    {push_args}
+
+    mov     rax, [{table_name}_pre_calls + {func_offset}]
+    test    rax, rax
+    jz      loc_{func_name}_pre_call_none
+    mov     rcx, [{table_name}_pre_call_args + {func_offset}]
+    call    rax
+
+loc_{func_name}_pre_call_none:
+    mov     [rbx + 16], rax
+
+    call    qword ptr [{table_name}_entries + {func_offset}]
+
+    mov     rax, [{table_name}_post_calls + {func_offset}]
+    test    rax, rax
+    jz      loc_{func_name}_post_call_none
+    mov     rcx, [rbx + 16]
+    call    rax
+
+loc_{func_name}_post_call_none:
+    push    [rbx]
+    mov     rcx, [rbx + 24]
+    mov     rbx, [rbx + 8]
+    ret
+
+{func_name} ENDP
+
+'''.format(func_name='{0}_bridge_{1}'.format(j['table_name'], i + 1), func_offset=i * 4, **j) for i, j in enumerate([locals()] * table_len)])}
+
+_TEXT	ends
+
+end

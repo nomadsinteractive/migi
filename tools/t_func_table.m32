@@ -1,0 +1,92 @@
+PUBLIC _{table_name}_entries
+PUBLIC _{table_name}_pre_calls
+PUBLIC _{table_name}_pre_call_args
+PUBLIC _{table_name}_post_calls
+PUBLIC _{table_name}_bridges
+PUBLIC _{table_name}_table_len
+
+_STACK_UNIT_SIZE    EQU 16
+_STACK_SIZE         EQU {stack_len} * _STACK_UNIT_SIZE
+
+.686p
+.xmm
+
+_DATA	segment
+
+_{table_name}_entries       DD  {table_len}     DUP(0)
+_{table_name}_pre_calls     DD  {table_len}     DUP(0)
+_{table_name}_pre_call_args DD  {table_len}     DUP(0)
+_{table_name}_post_calls    DD  {table_len}     DUP(0)
+
+_{table_name}_stacks     DB  _STACK_SIZE     DUP(0)
+_{table_name}_stack_ptr  DD  0
+
+_DATA	ends
+
+_RDATA	segment
+
+_{table_name}_table_len  DD   {table_len}
+_{table_name}_bridges    {f'{os.linesep}								'.join(['DD _{table_name}_bridge_{0}'.format(i + 1, **j) for i, j in enumerate([locals()] * table_len)])}
+
+_RDATA	ends
+
+_TEXT	segment
+
+_{table_name}_bridge_stack_poll PROC
+
+    mov     eax, [ds:_{table_name}_stack_ptr]
+    inc     eax
+    cmp     eax, {stack_len}
+    jl      loc_{table_name}_bridge_stack_poll_store
+    mov     eax, 0
+loc_{table_name}_bridge_stack_poll_store:
+    mov     [ds:_{table_name}_stack_ptr], eax
+
+    imul    eax, _STACK_UNIT_SIZE
+    lea     eax, [_{table_name}_stacks + eax]
+
+    retn
+
+_{table_name}_bridge_stack_poll ENDP
+
+{''.join(['''
+_{func_name} PROC
+
+    call    _{table_name}_bridge_stack_poll
+    mov     [eax + 4], ebx
+    mov     ebx, eax
+    pop     eax
+    mov     [ebx], eax
+    {push_args}
+
+    mov     eax, [ds:_{table_name}_pre_calls + {func_offset}]
+    test    eax, eax
+    jz      loc_{func_name}_pre_call_none
+    push    [ds:_{table_name}_pre_call_args + {func_offset}]
+    call    eax
+    add     esp, 4
+
+loc_{func_name}_pre_call_none:
+    mov     [ebx + 8], eax
+
+    call    dword ptr [ds:_{table_name}_entries + {func_offset}]
+
+    mov     eax, [ds:_{table_name}_post_calls + {func_offset}]
+    test    eax, eax
+    jz      loc_{func_name}_post_call_none
+    push    [ebx + 8]
+    call    eax
+    add     esp, 4
+
+loc_{func_name}_post_call_none:
+    push    [ebx]
+    mov     ebx, [ebx + 4]
+    retn
+
+_{func_name} ENDP
+
+'''.format(func_name='{0}_bridge_{1}'.format(j['table_name'], i + 1), func_offset=i * 4, **j) for i, j in enumerate([locals()] * table_len)])}
+
+_TEXT	ends
+
+end

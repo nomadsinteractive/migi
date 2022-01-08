@@ -1,0 +1,22 @@
+#include "{table_name}_function_table.h"
+
+extern "C" size_t {table_name}_table_len;
+extern "C" uintptr_t {table_name}_entries[];
+extern "C" uintptr_t {table_name}_pre_calls[];
+extern "C" uintptr_t {table_name}_post_calls[];
+extern "C" const uintptr_t {table_name}_bridges[];
+
+
+namespace migi {{
+
+{class_name}FunctionTable& {class_name}FunctionTable::getInstance() {{
+    static {class_name}FunctionTable gInstance;
+    return gInstance;
+}}
+
+{class_name}FunctionTable::{class_name}FunctionTable()
+    : FunctionTable({table_name}_bridges, {table_name}_entries, reinterpret_cast<FunctionTable::PreCallFunctionPtr*>({table_name}_pre_calls),
+                    reinterpret_cast<FunctionTable::PostCallFunctionPtr*>({table_name}_post_calls), {table_name}_table_len) {{
+}}
+
+}}

@@ -1,0 +1,19 @@
+#ifndef MIGI_{table_name.upper()}_FUNCTION_TABLE_H_
+#define MIGI_{table_name.upper()}_FUNCTION_TABLE_H_
+
+#include "function_table.h"
+
+namespace migi {{
+
+class {class_name}FunctionTable : public FunctionTable {{
+public:
+    static {class_name}FunctionTable& getInstance();
+
+private:
+    {class_name}FunctionTable();
+
+}};
+
+}}
+
+#endif
