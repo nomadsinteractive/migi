@@ -22,6 +22,9 @@ session = migi.attach_process('notepad.exe', python_console=[])
 An interactive Python console, which runs inside the host app, will show up if nothing goes wrong. 
 
 ### 3. Make function calls
+
+Typing the scripts below into that host-running console you've just created and everything should be self-explanatory. 
+
 ```python
 from ctypes import *
 from migi.decorators import stdcall
