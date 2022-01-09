@@ -22,6 +22,7 @@ int32_t Interceptor::intercept()
     if(*_function_entry_ptr != _function_original)
         return 0;
 
+    const Interceptor::ScopedTransaction transaction;
     return DetourAttach(_function_entry_ptr, _function_detoured_to);
 }
 
@@ -30,6 +31,7 @@ int32_t Interceptor::restore()
     if(*_function_entry_ptr == _function_original)
         return 0;
 
+    const Interceptor::ScopedTransaction transaction;
     return DetourDetach(_function_entry_ptr, _function_detoured_to);
 }
 
