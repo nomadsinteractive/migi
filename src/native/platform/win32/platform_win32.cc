@@ -88,34 +88,6 @@ Device* Platform::createDevice(Device::DeviceType deviceType)
     return new DeviceWin32();
 }
 
-uint32_t Platform::findProcessByName(const std::string& processName)
-{
-    Handle hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if(!hProcessSnap)
-    {
-        printError(TEXT("CreateToolhelp32Snapshot (of processes)"));
-        return 0;
-    }
-
-    PROCESSENTRY32 pe32;
-    pe32.dwSize = sizeof(PROCESSENTRY32);
-
-    if(!Process32First(static_cast<HANDLE>(hProcessSnap), &pe32))
-    {
-        printError(TEXT("Process32First"));
-        return 0;
-    }
-
-    do
-    {
-        if(lstrcmpi(processName.c_str(), pe32.szExeFile) == 0)
-            return pe32.th32ProcessID;
-
-    } while(Process32Next(static_cast<HANDLE>(hProcessSnap), &pe32));
-
-    return 0;
-}
-
 Injector* Platform::createInjector(uint32_t pid)
 {
     return new InjectorCreateRemoteThread(pid);

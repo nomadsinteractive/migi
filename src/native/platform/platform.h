@@ -29,8 +29,6 @@ public:
     static void* getModuleProcAddr(void* moduleAddr, const std::string& procName);
 
     static Device* createDevice(Device::DeviceType deviceType);
-
-    static uint32_t findProcessByName(const std::string& processName);
     static Injector* createInjector(uint32_t pid);
 
 };

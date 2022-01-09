@@ -135,6 +135,9 @@ class Device:
     def create_injector(self, pid: int) -> Injector:
         pass
 
+    def get_process_architecture(self, pid: int) -> int:
+        pass
+
     def find_process_by_name(self, name: str) -> int:
         pass
 

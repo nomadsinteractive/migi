@@ -1,39 +1,15 @@
 import os
-import sys
 from ctypes import c_uint32, addressof, c_void_p, cast, c_int64, c_uint64, \
     c_ulonglong, c_longlong
-from importlib.machinery import PathFinder, ModuleSpec, ExtensionFileLoader, EXTENSION_SUFFIXES
-from platform import python_version_tuple, architecture
 from typing import List, Optional, Any, Union
 
-
-class MigiExtensionPathFinder(PathFinder):
-    @classmethod
-    def find_spec(cls, fullname, path=None, target=None) -> Optional[ModuleSpec]:
-        if fullname == '_migi':
-            extension_suffixs = list(EXTENSION_SUFFIXES)
-            version_major, _, _ = python_version_tuple()
-            arch_type, _ = architecture()
-            limited_api_ext_suffix = f'.cp{version_major}-{"win32" if arch_type == "32bit" else "win_amd64"}.pyd'
-            if limited_api_ext_suffix not in extension_suffixs:
-                extension_suffixs.append(limited_api_ext_suffix)
-
-            dirname, _ = os.path.split(__file__)
-            for i in extension_suffixs:
-                module_path = os.path.join(dirname, f'bin/{fullname}{i}')
-                if os.path.isfile(module_path):
-                    return ModuleSpec(fullname, ExtensionFileLoader(fullname, module_path), origin=module_path)
-        return None
-
-
-sys.meta_path.insert(0, MigiExtensionPathFinder)
-
-
+from . import _internal
 import _migi
 from migi.manifest import Manifest
 from migi.platform import Injector, Device
 from migi.session import Session
 from migi.utils import get_package_file_path
+from ._internal import get_python_runtime_limited_api_suffix
 
 _manifest_file_path = ''
 
@@ -78,9 +54,7 @@ def attach_process(pid_or_proc_name: Union[int, str], *, device: Union[int, Devi
     if isinstance(device, int):
         device = Device(_migi.create_device(device))
 
-    version_major, _, _ = python_version_tuple()
-    arch_type, _ = architecture()
-    library_name = f'bin/migi.cp{version_major}-{"win32" if arch_type == "32bit" else "win_amd64"}.dll'
+    library_name = f'bin/migi{get_python_runtime_limited_api_suffix("dll")}'
     library_path = get_package_file_path(library_name)
 
     injector = device.create_injector(pid=pid_or_proc_name) if isinstance(pid_or_proc_name, int) else device.create_injector(process_name=pid_or_proc_name)

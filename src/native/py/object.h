@@ -102,10 +102,10 @@ private:
         return PyLong_FromLong(static_cast<int32_t>(cppobj));
     }
     template<typename T> static PyObject* toPyObject_sfinae(T cppobj, std::enable_if_t<std::is_integral<remove_cvref_t<T>>::value && !std::is_same<remove_cvref_t<T>, bool>::value && std::is_signed<remove_cvref_t<T>>::value>*) {
-        return PyLong_FromLong(cppobj);
+        return sizeof(T) < sizeof(long long) ? PyLong_FromLong(cppobj) : PyLong_FromLongLong(cppobj);
     }
     template<typename T> static PyObject* toPyObject_sfinae(T cppobj, std::enable_if_t<std::is_integral<remove_cvref_t<T>>::value && !std::is_same<remove_cvref_t<T>, bool>::value && std::is_unsigned<remove_cvref_t<T>>::value>*) {
-        return PyLong_FromUnsignedLong(cppobj);
+        return sizeof(T) < sizeof(long long) ? PyLong_FromUnsignedLong(cppobj) : PyLong_FromUnsignedLongLong(cppobj);
     }
     template<typename T> static PyObject* toPyObject_sfinae(T cppobj, std::enable_if_t<std::is_floating_point<remove_cvref_t<T>>::value>*) {
         return PyFloat_FromDouble(cppobj);

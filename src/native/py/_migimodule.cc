@@ -316,6 +316,7 @@ public:
         static PyMethodDef PyDeviceType_methods[] = {
             {"create_console", reinterpret_cast<PyCFunction>(PyDeviceType::create_console), METH_VARARGS, nullptr},
             {"create_injector", reinterpret_cast<PyCFunction>(PyDeviceType::create_injector), METH_VARARGS, nullptr},
+            {"get_process_architecture", reinterpret_cast<PyCFunction>(PyDeviceType::get_process_architecture), METH_VARARGS, nullptr},
             {"find_process_by_name", reinterpret_cast<PyCFunction>(PyDeviceType::find_process_by_name), METH_VARARGS, nullptr},
             {nullptr, nullptr, 0, nullptr}
         };
@@ -332,6 +333,13 @@ private:
         if(!PyArg_ParseTuple(args, "I", &arg0))
             Py_RETURN_NONE;
         return Singleton<PyInjectorType>::instance().create(std::unique_ptr<Injector>(self->instance()->createInjector(arg0)));
+    }
+
+    static PyObject* get_process_architecture(Instance* self, PyObject* args) {
+        uint32_t arg0;
+        if(!PyArg_ParseTuple(args, "I", &arg0))
+            Py_RETURN_NONE;
+        return py::Object::toPyObject(self->instance()->getProcessArchitecture(arg0));
     }
 
     static PyObject* find_process_by_name(Instance* self, PyObject* args) {

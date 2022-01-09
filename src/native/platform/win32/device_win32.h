@@ -11,7 +11,9 @@ public:
 
     virtual Console* createConsole() override;
     virtual Injector* createInjector(uint32_t pid) override;
-    virtual uint32_t findProcessByName(const std::string& processName) override;
+    virtual ProcessArchitecture getProcessArchitecture(uint32_t pid) override;
+
+    virtual int32_t findProcessByName(const std::string& processName) override;
 };
 
 }
