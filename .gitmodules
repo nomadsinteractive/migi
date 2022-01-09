@@ -1,0 +1,6 @@
+[submodule "3rdparty/Detours"]
+	path = 3rdparty/Detours
+	url = https://github.com/microsoft/Detours.git
+[submodule "3rdparty/json"]
+	path = 3rdparty/json
+	url = https://github.com/nlohmann/json.git
