@@ -70,6 +70,7 @@ loc_{func_name}_pre_call_none:
     mov     [ebx + 8], eax
 
     call    dword ptr [ds:_{table_name}_entries + {func_offset}]
+    mov     [ebx + 12], eax
 
     mov     eax, [ds:_{table_name}_post_calls + {func_offset}]
     test    eax, eax
@@ -80,6 +81,7 @@ loc_{func_name}_pre_call_none:
 
 loc_{func_name}_post_call_none:
     push    [ebx]
+    mov     eax, [ebx + 12]
     mov     ebx, [ebx + 4]
     retn
 

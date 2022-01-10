@@ -173,9 +173,9 @@ list(APPEND LOCAL_LIBS detours ws2_32 iphlpapi psapi)
 set(MIGI_FUNC_TABLE_LEN 64 CACHE INTEGER "Length of FunctionTable")
 
 macro(migi_gen_func_table TABLE_NAME INSTRUCTION_TYPE REG_ARGS)
-    migi_add_generated_file(${CMAKE_SOURCE_DIR}/tools/gen_func_table.py ${TABLE_NAME}_${INSTRUCTION_TYPE}.asm ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/tools/t_func_table.${INSTRUCTION_TYPE} -n ${TABLE_NAME}  -l ${MIGI_FUNC_TABLE_LEN} -t tools/t_func_table.${INSTRUCTION_TYPE} -r ${REG_ARGS})
-    migi_add_generated_file(${CMAKE_SOURCE_DIR}/tools/gen_func_table.py ${TABLE_NAME}_function_table.h ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/tools/t_func_table.h.template -n ${TABLE_NAME}  -l ${MIGI_FUNC_TABLE_LEN} -t tools/t_func_table.h.template)
-    migi_add_generated_file(${CMAKE_SOURCE_DIR}/tools/gen_func_table.py ${TABLE_NAME}_function_table.cc ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/tools/t_func_table.cc.template -n ${TABLE_NAME}  -l ${MIGI_FUNC_TABLE_LEN} -t tools/t_func_table.cc.template)
+    migi_add_generated_file(${CMAKE_SOURCE_DIR}/tools/gen_func_table.py ${TABLE_NAME}_${INSTRUCTION_TYPE}.asm ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/tools/func_table.${INSTRUCTION_TYPE}.template -n ${TABLE_NAME}  -l ${MIGI_FUNC_TABLE_LEN} -t tools/func_table.${INSTRUCTION_TYPE}.template -r ${REG_ARGS})
+    migi_add_generated_file(${CMAKE_SOURCE_DIR}/tools/gen_func_table.py ${TABLE_NAME}_function_table.h ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/tools/func_table.h.template -n ${TABLE_NAME}  -l ${MIGI_FUNC_TABLE_LEN} -t tools/func_table.h.template)
+    migi_add_generated_file(${CMAKE_SOURCE_DIR}/tools/gen_func_table.py ${TABLE_NAME}_function_table.cc ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/tools/func_table.cc.template -n ${TABLE_NAME}  -l ${MIGI_FUNC_TABLE_LEN} -t tools/func_table.cc.template)
 endmacro()
 
 if(LOCAL_ARCH_64)
@@ -193,12 +193,18 @@ endif()
 
 migi_add_debug_flag()
 
+list(APPEND LOCAL_COMPILE_DEFINITIONS
+    Py_LIMITED_API
+)
+
+
 migi_add_static_library(
     migi_static
     SRCS ${LOCAL_SRC_LIST} ${LOCAL_GENERATED_SRC_LIST} ${LOCAL_RES_LIST}
+    SRCS ${LOCAL_NATIVE_SRC_ROOT}/py/_migimodule.cc
     INCLUDE_DIRS ${LOCAL_INCLUDE_DIRS}
+    COMPILE_DEFINITIONS ${LOCAL_COMPILE_DEFINITIONS}
     COMPILE_OPTIONS ${LOCAL_COMPILER_OPTIONS}
-    COMPILE_DEFINITIONS Py_LIMITED_API
 )
 
 migi_add_shared_library(
@@ -207,7 +213,7 @@ migi_add_shared_library(
     LIBS ${LOCAL_LIBS} ${Python3_LIMITED_API_LIBRARIES} migi_static
     LIB_DIRS ${Python3_LIBRARY_DIRS}
     INCLUDE_DIRS ${LOCAL_INCLUDE_DIRS}
-    COMPILE_DEFINITIONS MIGI_FLAG_BUILDING_LIBRARY Py_LIMITED_API
+    COMPILE_DEFINITIONS ${LOCAL_COMPILE_DEFINITIONS}
     COMPILE_OPTIONS ${LOCAL_COMPILER_OPTIONS}
     OUTPUT_NAME migi${LOCAL_PYTHON_LIMITED_API_BINARY_SUFFIX}
 )
@@ -218,7 +224,7 @@ migi_add_shared_library(
     LIBS ${LOCAL_LIBS} ${Python3_LIBRARIES} migi_static
     LIB_DIRS ${Python3_LIBRARY_DIRS}
     INCLUDE_DIRS ${LOCAL_INCLUDE_DIRS}
-    COMPILE_DEFINITIONS MIGI_FLAG_BUILDING_LIBRARY MIGI_FLAG_BUILDING_PYD Py_LIMITED_API
+    COMPILE_DEFINITIONS ${LOCAL_COMPILE_DEFINITIONS}
     COMPILE_OPTIONS ${LOCAL_COMPILER_OPTIONS}
     OUTPUT_NAME _migi${LOCAL_PYTHON_LIMITED_API_BINARY_SUFFIX}
     SUFFIX .pyd
@@ -231,7 +237,7 @@ migi_add_executable(
     LIB_DIRS ${Python3_LIBRARY_DIRS}
     OUTPUT_NAME migi
     INCLUDE_DIRS ${LOCAL_INCLUDE_DIRS}
-    COMPILE_DEFINITIONS MIGI_FLAG_BUILDING_LIBRARY
+    COMPILE_DEFINITIONS ${LOCAL_COMPILE_DEFINITIONS} MIGI_FLAG_EMBED_MODULE
     COMPILE_OPTIONS ${LOCAL_COMPILER_OPTIONS}
 )
 
