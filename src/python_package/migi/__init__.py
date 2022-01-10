@@ -1,4 +1,3 @@
-import os
 from ctypes import c_uint32, addressof, c_void_p, cast, c_int64, c_uint64, \
     c_ulonglong, c_longlong
 from typing import List, Optional, Any, Union
@@ -12,11 +11,6 @@ from migi.utils import get_package_file_path
 from ._internal import get_python_runtime_limited_api_suffix
 
 _manifest_file_path = ''
-
-
-def find_file(filename: str):
-    working_dir, _ = os.path.split(_manifest_file_path)
-    return _migi.find_file(filename, working_dir)
 
 
 def detach():
@@ -60,6 +54,14 @@ def attach_process(pid_or_proc_name: Union[int, str], *, device: Union[int, Devi
     injector = device.create_injector(pid=pid_or_proc_name) if isinstance(pid_or_proc_name, int) else device.create_injector(process_name=pid_or_proc_name)
     injector.inject(library_path, Manifest(**kwargs) if kwargs else None)
     return Session(device, injector)
+
+
+def get_properties() -> dict:
+    return _migi.get_properties()
+
+
+def get_property(name: str, def_value: Optional[str]) -> Optional[str]:
+    return _migi.get_properties().get(name, def_value)
 
 
 def _pack_one_argument(obj: Any, obj_signature: Optional[Any] = None) -> List[int]:

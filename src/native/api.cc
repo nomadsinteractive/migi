@@ -19,6 +19,8 @@
 
 namespace migi {
 
+extern std::map<std::string, std::string> gProperties;
+
 void __fatal__(const char* func, const char* condition, const char* format, ...)
 {
     char buf[2048];
@@ -207,13 +209,6 @@ const std::string& get_module_file_path()
     return sModuleFilePath;
 }
 
-std::string find_file(const std::string& filename, const std::string& workingDir)
-{
-    const std::filesystem::path executableFilePath = std::filesystem::absolute(get_module_file_path());
-    const std::filesystem::path executableDir = std::filesystem::absolute(executableFilePath.parent_path());
-    return std::filesystem::absolute(tryAvailablePath(executableDir, workingDir, filename)).string();
-}
-
 void logd(const std::string& message)
 {
     log(1, message);
@@ -228,6 +223,11 @@ uintptr_t get_module_address(const std::string& moduleName, uintptr_t offset)
 uintptr_t get_module_proc(const std::string& moduleName, const std::string& procName)
 {
     return reinterpret_cast<uintptr_t>(Platform::getModuleProcAddr(Platform::getModuleAddr(moduleName), procName));
+}
+
+const std::map<std::string, std::string>& get_properties()
+{
+    return gProperties;
 }
 
 }

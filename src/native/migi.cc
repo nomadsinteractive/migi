@@ -25,25 +25,21 @@
 
 #include "platform/platform.h"
 
+namespace migi {
+
 static bool gDetached = false;
 
 static uintptr_t gModule = 0;
 static uintptr_t gExtraParameterPtr = 0;
 static bool gConsoleMode = false;
-static std::map<std::string, std::string> gProperties;
 
 
-std::string getConsoleInput(HANDLE hCin)
+std::map<std::string, std::string> gProperties;
+
+
+std::string ensurePythonConsoleInput(Console& console)
 {
-    char szConsoleBuffer[1024];
-    DWORD dwInputRead = 0;
-    bool succ = ReadConsole(hCin, szConsoleBuffer, sizeof(szConsoleBuffer), &dwInputRead, nullptr);
-    return succ ? std::string(szConsoleBuffer, dwInputRead) : "";
-}
-
-std::string ensurePythonConsoleInput(migi::Console& console)
-{
-    const migi::py::GILScopedRelease release;
+    const py::GILScopedRelease release;
     while(!gDetached) {
         const std::string consoleInput = console.readLine();
         if(consoleInput.size() > 0)
@@ -53,16 +49,6 @@ std::string ensurePythonConsoleInput(migi::Console& console)
     return "";
 }
 
-
-void writeConsoleOutput(const std::string& output)
-{
-    if(!output.empty())
-    {
-        DWORD dwSize = 0;
-        HANDLE hCout = GetStdHandle(STD_OUTPUT_HANDLE);
-        WriteConsole(hCout, output.c_str(), output.length(), &dwSize, nullptr);
-    }
-}
 
 std::string strip(const std::string& str)
 {
@@ -83,13 +69,11 @@ std::string dumpMemory(const uint8_t* memory, size_t length)
 {
     char buf[256];
     char padding[] = "         ";
-    char ptrPrintFormat[64];
     std::ostringstream sb;
 
-    std::snprintf(ptrPrintFormat, sizeof(ptrPrintFormat), "%%0%dXh: ", static_cast<uint32_t>(sizeof(uintptr_t)));
     for(size_t i = 0; i < length; i += 16)
     {
-        std::snprintf(buf, sizeof(buf), ptrPrintFormat, i);
+        std::snprintf(buf, sizeof(buf), "%08Xh: ", static_cast<uint32_t>(i));
         sb << buf;
 
         for(size_t j = 0; j < 16; j += 4)
@@ -128,18 +112,18 @@ static void cmdExit()
 
 void runConsoleInInteractiveMode(const std::vector<std::string>& runCommands)
 {
-    const std::unique_ptr<migi::Device> device(migi::Platform::createDevice(migi::Device::DEVICE_TYPE_LOCAL_MACHINE));
-    const std::unique_ptr<migi::Console> console(device->createConsole());
+    const std::unique_ptr<Device> device(Platform::createDevice(Device::DEVICE_TYPE_LOCAL_MACHINE));
+    const std::unique_ptr<Console> console(device->createConsole());
     console->show();
 
-    migi::py::GILScopedAquire acquire;
+    py::GILScopedAquire acquire;
 
     for(const std::string& i : runCommands)
-        migi::py::PyExec(i, *console);
+        py::PyExec(i, *console);
 
     std::vector<std::string> scripts;
     while(!gDetached) {
-        writeConsoleOutput(scripts.empty() ? ">>> " : "... ");
+        console->write(scripts.empty() ? ">>> " : "... ");
         std::string oneLine = ensurePythonConsoleInput(*console);
         std::string oneLineStripped = strip(oneLine);
 
@@ -155,14 +139,14 @@ void runConsoleInInteractiveMode(const std::vector<std::string>& runCommands)
             else if(oneLineStripped.at(0) == '@' || oneLineStripped.at(oneLineStripped.length() - 1) == ':' || oneLineStripped.at(oneLineStripped.length() - 1) == '\\')
                 scripts.push_back(std::move(oneLineStripped));
             else
-                migi::py::PyExec(oneLineStripped, *console);
+                py::PyExec(oneLineStripped, *console);
         }
         else if(scripts.size() > 0)
         {
             std::ostringstream strbuf;
             for(const std::string& i : scripts)
                 strbuf << i << '\n';
-            migi::py::PyExec(strbuf.str(), *console);
+            py::PyExec(strbuf.str(), *console);
             scripts.clear();
         }
     }
@@ -292,15 +276,15 @@ static void loadManifest(const nlohmann::json& manifest)
         gProperties[key] = getVariable(value);
 
     for(const std::string& i : getJSONStringArray(manifest, "load_libraries"))
-        migi::Platform::loadLibrary(std::filesystem::absolute(getPathVariable(workDir, i)).string(), 0);
+        Platform::loadLibrary(std::filesystem::absolute(getPathVariable(workDir, i)).string(), 0);
 
-    migi::py::Object modsys = migi::py::PyImportModule("sys");
+    py::Object modsys = py::PyImportModule("sys");
     for(const std::string& i : getJSONStringArray(manifest, "python_paths"))
         modsys.attr("path").attr("append")(std::filesystem::absolute(getPathVariable(workDir, i)).string());
 
-    const std::unique_ptr<migi::Console> console(new migi::ConsoleStd());
+    const std::unique_ptr<Console> console(new ConsoleStd());
     for(const std::string& i : getJSONStringArray(manifest, "python_scripts"))
-        migi::py::PyRunScript(std::filesystem::absolute(getPathVariable(workDir, i)).string(), *console);
+        py::PyRunScript(std::filesystem::absolute(getPathVariable(workDir, i)).string(), *console);
 
     if(manifest.find("python_console") != manifest.end())
     {
@@ -338,38 +322,38 @@ void start(int32_t argc, const char* argv[], uintptr_t module)
                 manifestInput >> manifest;
         }
 
-        std::unique_ptr<migi::py::GILScopedAquire> aquire;
+        std::unique_ptr<py::GILScopedAquire> aquire;
         const bool isInitialized = Py_IsInitialized();
 
         if(isInitialized)
-            aquire = std::unique_ptr<migi::py::GILScopedAquire>(new migi::py::GILScopedAquire());
+            aquire = std::unique_ptr<py::GILScopedAquire>(new py::GILScopedAquire());
         else
-            migi::py::PyInitialize();
+            py::PyInitialize();
 
-        migi::py::List pyArgv;
+        py::List pyArgv;
         for(int32_t i = 0; i < argc; ++i)
             pyArgv.append(argv[i]);
 
-        migi::py::Object mod_sys = migi::py::PyImportModule("sys");
+        py::Object mod_sys = py::PyImportModule("sys");
         mod_sys.setattr("argv", pyArgv);
 
         loadManifest(manifest);
 
         while(!gDetached)
         {
-            const migi::py::GILScopedRelease release;
+            const py::GILScopedRelease release;
             std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<uint32_t>(2000)));
         }
 
         if(!isInitialized)
-            migi::py::PyFinalize();
+            py::PyFinalize();
     }
 }
 
 void log(uint32_t level, const std::string& message)
 {
-    const migi::py::GILScopedRelease release;
-    migi::Platform::log(static_cast<migi::Platform::LogLevel>(level), "[migi]", message);
+    const py::GILScopedRelease release;
+    Platform::log(static_cast<Platform::LogLevel>(level), "[migi]", message);
 }
 
 bool isConsoleMode()
@@ -385,4 +369,6 @@ void setExtraParameterPtr(uintptr_t extraParameterPtr)
 void detach()
 {
     gDetached = true;
+}
+
 }

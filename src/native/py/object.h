@@ -67,7 +67,7 @@ public:
     }
 
     template<typename T> static PyObject* toPyObject(T cppobj) {
-        return toPyObject_sfinae(cppobj, nullptr);
+        return toPyObject_sfinae(std::forward<T>(cppobj), nullptr);
     }
 
     template<typename T> static T toCppObject(PyObject* pyobj) {
@@ -121,6 +121,12 @@ private:
     }
     template<typename T> static PyObject* toPyObject_sfinae(T cppobj, std::enable_if_t<std::is_same<remove_cvref_t<T>, std::wstring>::value>*) {
         return PyUnicode_FromWideChar(cppobj.c_str(), 0);
+    }
+    template<typename T> static PyObject* toPyObject_sfinae(T cppobj, std::remove_reference_t<decltype(cppobj.begin()->second)>*) {
+        PyObject* pyDict = PyDict_New();
+        for(const auto& i : cppobj)
+            PyDict_SetItem(pyDict, toPyObject(i.first), toPyObject(i.second));
+        return pyDict;
     }
 
     template<typename T> static T toCppObject_sfinae(PyObject* pyobj, std::enable_if_t<std::is_same<remove_cvref_t<T>, std::string>::value>*) {

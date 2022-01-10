@@ -18,10 +18,6 @@ def sleep_for(seconds: float):
     pass
 
 
-def find_file(filename: str, working_dir: str):
-    pass
-
-
 def sizeof_void_p() -> int:
     return struct.calcsize("P")
 
@@ -94,6 +90,10 @@ def get_module_file_path() -> str:
 
 
 def start_console(cmds: List[str]):
+    pass
+
+
+def get_properties() -> dict:
     pass
 
 

@@ -2,6 +2,7 @@
 #define MIGI_API_H_
 
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -88,11 +89,12 @@ std::shared_ptr<Interceptor> make_interceptor(uintptr_t originalFunc, uintptr_t 
 void start_console(std::vector<std::string> commands);
 
 const std::string& get_module_file_path();
-std::string find_file(const std::string& filename, const std::string& workingDir);
 
 void logd(const std::string& message);
 uintptr_t get_module_address(const std::string& moduleName, uintptr_t offset);
 uintptr_t get_module_proc(const std::string& moduleName, const std::string& procName);
+
+const std::map<std::string, std::string>& get_properties();
 
 }
 

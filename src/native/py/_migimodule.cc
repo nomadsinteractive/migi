@@ -533,15 +533,6 @@ static PyObject* migi_get_module_file_path(PyObject* /*self*/, PyObject* /*args*
     return py::Object::toPyObject(get_module_file_path());
 }
 
-static PyObject* migi_find_file(PyObject* /*self*/, PyObject* args)
-{
-    const char* arg0;
-    const char* arg1;
-    if(!PyArg_ParseTuple(args, "ss", &arg0, &arg1))
-        Py_RETURN_NONE;
-    return py::Object::toPyObject(find_file(arg0, arg1));
-}
-
 static PyObject* migi_logd(PyObject* /*self*/, PyObject* args)
 {
     const char* arg0;
@@ -569,6 +560,11 @@ static PyObject* migi_get_module_proc(PyObject* /*self*/, PyObject* args)
     return py::Object::toPyObject(get_module_proc(arg0, arg1));
 }
 
+static PyObject* migi_get_properties(PyObject* /*self*/, PyObject* /*args*/)
+{
+    return py::Object::toPyObject(get_properties());
+}
+
 }
 
 
@@ -591,10 +587,10 @@ PyMODINIT_FUNC PyInit__migi(void) {
         {"make_interceptor",  migi::migi_make_interceptor, METH_VARARGS, "make_interceptor"},
         {"start_console",  migi::migi_start_console, METH_VARARGS, "start_console"},
         {"get_module_file_path",  migi::migi_get_module_file_path, METH_VARARGS, "get_module_file_path"},
-        {"find_file",  migi::migi_find_file, METH_VARARGS, "find_file"},
         {"logd",  migi::migi_logd, METH_VARARGS, "logd"},
         {"get_module_addr",  migi::migi_get_module_addr, METH_VARARGS, "get_module_addr"},
         {"get_module_proc",  migi::migi_get_module_proc, METH_VARARGS, "get_module_proc"},
+        {"get_properties",  migi::migi_get_properties, METH_VARARGS, "get_properties"},
         {nullptr, nullptr, 0, nullptr}
     };
 

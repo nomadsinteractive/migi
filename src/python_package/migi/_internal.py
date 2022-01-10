@@ -1,3 +1,4 @@
+import importlib
 import os
 import sys
 from ctypes import sizeof, c_void_p, c_uint64, c_uint32
@@ -49,4 +50,11 @@ def abi_to_suffix(abi: int):
     return suffix_by_abi[abi]
 
 
-sys.meta_path.insert(0, MigiExtensionPathFinder)
+def switch_to_mock_mode():
+    sys.meta_path = list(filter(lambda x: x is not MigiExtensionPathFinder, sys.meta_path))
+    import _migi
+    importlib.reload(_migi)
+
+
+if '_migi' not in sys.builtin_module_names:
+    sys.meta_path.insert(0, MigiExtensionPathFinder)
