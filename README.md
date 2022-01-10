@@ -1,6 +1,6 @@
-# MIGI (My Ideas Got Incepted)
+# MIGI
 
-A powerful and versatile dynamic instrumentation toolkit.
+Migi(My Ideas Got Incepted) is a powerful and versatile dynamic instrumentation toolkit.
 
 ## How it works
 By injecting Python scripts into target host, migi makes host manipulation possible.

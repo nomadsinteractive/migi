@@ -7,13 +7,12 @@ import json
 
 class Manifest:
     def __init__(self, work_dir: Optional[str] = None, load_libraries: Optional[List[str]] = None, python_home: Optional[str] = None,
-                 python_paths: Optional[List[str]] = None, python_modules: Optional[List[str]] = None, python_scripts: Optional[List[str]] = None,
-                 python_console: Optional[List[str]] = None, properties: Optional[Dict[str, str]] = None):
+                 python_paths: Optional[List[str]] = None, python_scripts: Optional[List[str]] = None, python_console: Optional[List[str]] = None,
+                 properties: Optional[Dict[str, str]] = None):
         self._work_dir = work_dir or os.getcwd()
         self._load_libraries = load_libraries
         self._python_home = python_home or self._get_python_home()
         self._python_paths = python_paths
-        self._python_modules = python_modules
         self._python_scripts = python_scripts
         self._python_console = python_console
         self._properties = properties
@@ -25,8 +24,8 @@ class Manifest:
 
     def to_json_str(self) -> str:
         self._update_manifest(self._manifest, work_dir=self._work_dir, load_libraries=self._load_libraries, python_home=self._python_home,
-                              python_paths=self._python_paths, python_modules=self._python_modules, python_scripts=self._python_scripts,
-                              python_console=self._python_console, properties=self._properties)
+                              python_paths=self._python_paths, python_scripts=self._python_scripts, python_console=self._python_console,
+                              properties=self._properties)
         return json.dumps(self._manifest)
 
     def __str__(self) -> str:

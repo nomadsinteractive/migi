@@ -1,5 +1,6 @@
 import os
 import sys
+from ctypes import sizeof, c_void_p, c_uint64, c_uint32
 from importlib.machinery import PathFinder, ModuleSpec, ExtensionFileLoader, EXTENSION_SUFFIXES
 from platform import architecture, python_version_tuple
 from typing import Optional
@@ -32,6 +33,10 @@ def get_python_runtime_limited_api_suffix(suffix: str):
     arch_type, _ = architecture()
     abi = get_python_runtime_abi()
     return f'.cp{version_major}-{abi_to_suffix(abi)}.{suffix}'
+
+
+def get_c_uintptr():
+    return c_uint64 if sizeof(c_void_p) == 8 else c_uint32
 
 
 def abi_to_suffix(abi: int):

@@ -145,7 +145,6 @@ void runConsoleInInteractiveMode(const std::vector<std::string>& runCommands)
 
         if(oneLineStripped == "exit")
         {
-            migi::py::PyFinalize();
             cmdExit();
             break;
         }
@@ -300,7 +299,7 @@ static void loadManifest(const nlohmann::json& manifest)
         modsys.attr("path").attr("append")(std::filesystem::absolute(getPathVariable(workDir, i)).string());
 
     const std::unique_ptr<migi::Console> console(new migi::ConsoleStd());
-    for(const std::string& i : getJSONStringArray(manifest, "python_modules"))
+    for(const std::string& i : getJSONStringArray(manifest, "python_scripts"))
         migi::py::PyRunScript(std::filesystem::absolute(getPathVariable(workDir, i)).string(), *console);
 
     if(manifest.find("python_console") != manifest.end())
@@ -339,7 +338,14 @@ void start(int32_t argc, const char* argv[], uintptr_t module)
                 manifestInput >> manifest;
         }
 
-        migi::py::PyInitialize();
+        std::unique_ptr<migi::py::GILScopedAquire> aquire;
+        const bool isInitialized = Py_IsInitialized();
+
+        if(isInitialized)
+            aquire = std::unique_ptr<migi::py::GILScopedAquire>(new migi::py::GILScopedAquire());
+        else
+            migi::py::PyInitialize();
+
         migi::py::List pyArgv;
         for(int32_t i = 0; i < argc; ++i)
             pyArgv.append(argv[i]);
@@ -355,7 +361,8 @@ void start(int32_t argc, const char* argv[], uintptr_t module)
             std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<uint32_t>(2000)));
         }
 
-        migi::py::PyFinalize();
+        if(!isInitialized)
+            migi::py::PyFinalize();
     }
 }
 
