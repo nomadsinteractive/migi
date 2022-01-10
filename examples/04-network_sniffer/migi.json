@@ -1,0 +1,8 @@
+{
+  "python_paths": [
+    "${migi.work_dir}"
+  ],
+  "python_scripts": [
+    "${migi.work_dir}/injection.py"
+  ]
+}
