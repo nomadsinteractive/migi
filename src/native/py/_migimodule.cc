@@ -247,14 +247,22 @@ private:
     }
 
     static PyObject* read_line(Instance* self, PyObject* /*args*/) {
-        return py::Object::toPyObject(self->instance()->readLine());
+        std::string line;
+        {
+            const py::GILScopedRelease release;
+            line = self->instance()->readLine();
+        }
+        return py::Object::toPyObject(line);
     }
 
     static PyObject* write(Instance* self, PyObject* args) {
         const char* arg0;
         if(!PyArg_ParseTuple(args, "s", &arg0))
             Py_RETURN_NONE;
-        self->instance()->write(arg0);
+        {
+            const py::GILScopedRelease release;
+            self->instance()->write(arg0);
+        }
         Py_RETURN_NONE;
     }
 
@@ -565,6 +573,12 @@ static PyObject* migi_get_properties(PyObject* /*self*/, PyObject* /*args*/)
     return py::Object::toPyObject(get_properties());
 }
 
+static PyObject* migi_detach(PyObject* /*self*/, PyObject* /*args*/)
+{
+    detach();
+    Py_RETURN_NONE;
+}
+
 }
 
 
@@ -591,6 +605,7 @@ PyMODINIT_FUNC PyInit__migi(void) {
         {"get_module_addr",  migi::migi_get_module_addr, METH_VARARGS, "get_module_addr"},
         {"get_module_proc",  migi::migi_get_module_proc, METH_VARARGS, "get_module_proc"},
         {"get_properties",  migi::migi_get_properties, METH_VARARGS, "get_properties"},
+        {"detach",  migi::migi_detach, METH_VARARGS, "detach"},
         {nullptr, nullptr, 0, nullptr}
     };
 

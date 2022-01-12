@@ -27,13 +27,13 @@
 
 namespace migi {
 
-static bool gDetached = false;
 
 static uintptr_t gModule = 0;
 static uintptr_t gExtraParameterPtr = 0;
 static bool gConsoleMode = false;
 
 
+bool gDetached = false;
 std::map<std::string, std::string> gProperties;
 
 
@@ -339,10 +339,10 @@ void start(int32_t argc, const char* argv[], uintptr_t module)
 
         loadManifest(manifest);
 
-        while(!gDetached)
         {
             const py::GILScopedRelease release;
-            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<uint32_t>(2000)));
+            while(!gDetached)
+                std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<uint32_t>(2000)));
         }
 
         if(!isInitialized)
@@ -364,11 +364,6 @@ bool isConsoleMode()
 void setExtraParameterPtr(uintptr_t extraParameterPtr)
 {
     gExtraParameterPtr = extraParameterPtr;
-}
-
-void detach()
-{
-    gDetached = true;
 }
 
 }

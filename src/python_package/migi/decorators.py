@@ -122,19 +122,19 @@ class _InterceptableFunctionBase:
         self._c_function_entry_ptr = c_function_entry_ptr
         self._c_function_detoured_to = c_function_detoured_to
         self._c_function_entry = None
-        self._detour_attachment = None
+        self._interceptor = None
 
     def __del__(self):
-        if self._detour_attachment:
-            self._detour_attachment.restore()
+        if self._interceptor:
+            self._interceptor.restore()
 
     def intercept(self) -> int:
-        if not self._detour_attachment:
-            self._detour_attachment = self._make_detour_attachment()
-        return self._detour_attachment.intercept()
+        if not self._interceptor:
+            self._interceptor = self._make_interceptor()
+        return self._interceptor.intercept()
 
     def restore(self) -> int:
-        return self._detour_attachment.restore() if self._detour_attachment else 0
+        return self._interceptor.restore() if self._interceptor else 0
 
     def __call__(self, *args, **kwargs):
         if not self._c_function_entry:
@@ -142,13 +142,13 @@ class _InterceptableFunctionBase:
         return self._c_function_entry(*args, **kwargs)
 
     def call_original(self, *args, **kwargs):
-        function_entry = self._c_function_type(self._detour_attachment.function_entry)
+        function_entry = self._c_function_type(self._interceptor.function_entry)
         return function_entry(*args, **kwargs)
 
     def _make_function_entry(self):
         return self._c_function_type(self._c_function_entry_ptr)
 
-    def _make_detour_attachment(self):
+    def _make_interceptor(self):
         return _migi.make_interceptor(self._c_function_entry_ptr, cast(self._c_function_detoured_to, c_void_p).value)
 
 
@@ -169,15 +169,15 @@ class _InterceptableThiscallFunction(_InterceptableFunctionBase):
         super().__init__(c_function_type, function_entry, c_function_detoured_to)
 
     def __del__(self):
-        super().__del__()
         _migi.stdcall_to_thiscall_recycle(self._c_function_converted_ptr)
+        super().__del__()
 
     def call_original(self, this_ptr, *args, stack_size=0):
-        function_entry = self._detour_attachment.function_entry
+        function_entry = self._interceptor.function_entry
         return make_thiscall(function_entry, this_ptr, *args, stack_size=stack_size or self._stack_size)
 
     def _make_function_entry(self):
         return _make_thiscall_func(self._c_function_entry_ptr, self._stack_size)
 
-    def _make_detour_attachment(self):
+    def _make_interceptor(self):
         return _migi.make_interceptor(self._c_function_entry_ptr, cast(self._c_function_converted, c_void_p).value)

@@ -20,6 +20,7 @@
 namespace migi {
 
 extern std::map<std::string, std::string> gProperties;
+extern bool gDetached;
 
 void __fatal__(const char* func, const char* condition, const char* format, ...)
 {
@@ -228,6 +229,11 @@ uintptr_t get_module_proc(const std::string& moduleName, const std::string& proc
 const std::map<std::string, std::string>& get_properties()
 {
     return gProperties;
+}
+
+void detach()
+{
+    gDetached = true;
 }
 
 }

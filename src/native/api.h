@@ -95,6 +95,7 @@ uintptr_t get_module_address(const std::string& moduleName, uintptr_t offset);
 uintptr_t get_module_proc(const std::string& moduleName, const std::string& procName);
 
 const std::map<std::string, std::string>& get_properties();
+void detach();
 
 }
 

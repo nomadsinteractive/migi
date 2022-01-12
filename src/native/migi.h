@@ -16,7 +16,6 @@
 namespace migi {
 
 void start(int32_t argc, const char* argv[], uintptr_t module);
-void detach();
 
 void log(uint32_t level, const std::string& message);
 bool isConsoleMode();
