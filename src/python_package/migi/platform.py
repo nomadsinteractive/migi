@@ -47,7 +47,7 @@ class Device:
         if pid < 0:
             pid = self._platform_device.find_process_by_name(process_name)
             if pid == -1:
-                raise ProcessDoesNotExist(f'Process "{process_name}" does not exists')
+                raise ProcessDoesNotExist(f'Process "{process_name}" does not exist')
         process_architecture = self._platform_device.get_process_architecture(pid)
         python_runtime_abi = get_python_runtime_abi()
         is_wow64_match = process_architecture == Device.PROCESS_ARCHITECTURE_WOW_64 and python_runtime_abi == Device.PROCESS_ARCHITECTURE_ABI_32

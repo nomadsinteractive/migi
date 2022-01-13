@@ -25,17 +25,18 @@
 
 #include "platform/platform.h"
 
-namespace migi {
 
+PyMODINIT_FUNC PyInit__migi(void);
+
+
+namespace migi {
 
 static uintptr_t gModule = 0;
 static uintptr_t gExtraParameterPtr = 0;
 static bool gConsoleMode = false;
 
-
 bool gDetached = false;
 std::map<std::string, std::string> gProperties;
-
 
 std::string ensurePythonConsoleInput(Console& console)
 {
@@ -48,7 +49,6 @@ std::string ensurePythonConsoleInput(Console& console)
     }
     return "";
 }
-
 
 std::string strip(const std::string& str)
 {
@@ -231,6 +231,16 @@ static std::string getPathVariable(const std::filesystem::path& workDir, const s
     return path.is_relative() ? (workDir / path).string() : path.string();
 }
 
+
+static std::string getJSONString(const nlohmann::json& json, const std::string& name, const std::string& defValue = "")
+{
+    const auto iter = json.find(name);
+    if(iter == json.end() || !iter->is_string())
+        return defValue;
+
+    return iter->get<std::string>();
+}
+
 static std::vector<std::string> getJSONStringArray(const nlohmann::json& json, const std::string& name)
 {
     const auto iter = json.find(name);
@@ -305,9 +315,9 @@ void start(int32_t argc, const char* argv[], uintptr_t module)
         nlohmann::json manifest;
         if(gExtraParameterPtr)
         {
-            initializeProperties(executableFilePath, "");
             std::istringstream manifestInput(reinterpret_cast<const char*>(gExtraParameterPtr));
             manifestInput >> manifest;
+            initializeProperties(executableFilePath, getJSONString(manifest, "manifest_path", ""));
         }
         else
         {
@@ -328,7 +338,10 @@ void start(int32_t argc, const char* argv[], uintptr_t module)
         if(isInitialized)
             aquire = std::unique_ptr<py::GILScopedAquire>(new py::GILScopedAquire());
         else
+        {
+            PyImport_AppendInittab("_migi", PyInit__migi);
             py::PyInitialize();
+        }
 
         py::List pyArgv;
         for(int32_t i = 0; i < argc; ++i)

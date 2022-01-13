@@ -9,7 +9,7 @@ There would be one and only one P0 task
 ## P1
 P1 features are side tasks.
 
-One of them will be moved to P0 once after P0 task is completed.
+One of them will move to P0 once after P0 task is completed.
 
 - [ ] Cross-platform support core
 - [ ] Addons framework
@@ -22,7 +22,7 @@ One of them will be moved to P0 once after P0 task is completed.
 ## P2
 P2 features are scheduled features.
 
-Some of them will be moved to P1 when timing is right.
+Some of them will move to P1 when timing is right.
 
 - Android platform support
 - IOS platform support

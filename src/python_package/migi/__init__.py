@@ -52,7 +52,7 @@ def attach_process(pid_or_proc_name: Union[int, str], *, device: Union[int, Devi
     library_path = get_package_file_path(library_name)
 
     injector = device.create_injector(pid=pid_or_proc_name) if isinstance(pid_or_proc_name, int) else device.create_injector(process_name=pid_or_proc_name)
-    injector.inject(library_path, Manifest(**kwargs) if kwargs else None)
+    injector.inject(library_path, Manifest(**kwargs))
     return Session(device, injector)
 
 

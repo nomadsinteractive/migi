@@ -9,8 +9,6 @@
 
 #include "py/forwarding.h"
 
-PyMODINIT_FUNC PyInit__migi(void);
-
 int32_t main(int32_t argc, const char* argv[])
 {
     if(argc <= 1)
@@ -36,9 +34,6 @@ int32_t main(int32_t argc, const char* argv[])
         for(int32_t i = 0; i < argc; ++i)
             if(i != 1)
                 vArgs.push_back(argv[i]);
-#ifdef MIGI_FLAG_EMBED_MODULE
-        PyImport_AppendInittab("_migi", PyInit__migi);
-#endif
         migi::start(argc - 1, vArgs.data(), 0);
     }
     return 0;
